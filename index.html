@@ -3,48 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Zamówienie">
   <title>Zamówienie posiłku</title>
+
+  <!-- Biblioteka do odczytu tekstowego PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs"
+          type="module"></script>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                   "Segoe UI", sans-serif;
       background: #f4f7f7;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
       color: #222;
     }
 
     .app {
-      max-width: 500px;
-      margin: auto;
+      max-width: 520px;
+      margin: 0 auto;
+      padding-bottom: 30px;
     }
 
     h1 {
       text-align: center;
       font-size: 28px;
+      margin: 12px 0 20px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 15px;
     }
 
     .card {
       background: white;
-      padding: 20px;
+      padding: 18px;
       border-radius: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }
 
-    label {
+    label.title {
       font-weight: 600;
       display: block;
       margin-bottom: 8px;
     }
 
-    input, select {
+    input[type="text"],
+    input[type="tel"],
+    select {
       width: 100%;
-      box-sizing: border-box;
       padding: 14px;
       border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 11px;
       font-size: 16px;
       background: white;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      font-size: 15px;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 11px;
+      border-radius: 10px;
+      background: #eef6f5;
+      color: #176b65;
+      font-size: 14px;
+      line-height: 1.4;
     }
 
     .crew {
@@ -59,6 +102,7 @@
       border-radius: 10px;
       background: white;
       font-size: 16px;
+      font-weight: 600;
     }
 
     .crew button.active {
@@ -67,26 +111,32 @@
       border-color: #168c83;
     }
 
-    .route {
-      display: block;
-      margin: 10px 0;
-      font-weight: normal;
+    .route-box {
+      background: #f5f5f5;
+      padding: 14px;
+      border-radius: 11px;
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.5;
     }
 
-    .route input {
-      width: auto;
-      margin-right: 8px;
+    .route-box.empty {
+      color: #777;
+      font-weight: normal;
+      font-size: 15px;
     }
 
     .preview {
       white-space: pre-line;
       background: #f1f1f1;
       padding: 15px;
-      border-radius: 10px;
-      line-height: 1.5;
+      border-radius: 11px;
+      line-height: 1.55;
+      font-size: 16px;
+      min-height: 120px;
     }
 
-    .send {
+    button.main {
       width: 100%;
       padding: 16px;
       border: none;
@@ -95,10 +145,60 @@
       color: white;
       font-size: 18px;
       font-weight: 600;
+      margin-top: 8px;
     }
 
-    .send:active {
-      opacity: 0.8;
+    button.secondary {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #168c83;
+      border-radius: 11px;
+      background: white;
+      color: #168c83;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    button:active {
+      opacity: 0.75;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .success {
+      background: #eaf7ed;
+      color: #226b34;
+    }
+
+    .warning {
+      background: #fff7df;
+      color: #765b00;
+    }
+
+    .flight-list {
+      margin-top: 12px;
+    }
+
+    .flight-day {
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    .flight-day:first-child {
+      border-top: none;
+    }
+
+    .flight-date {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .flight-route {
+      font-family: monospace;
+      font-size: 15px;
     }
   </style>
 </head>
@@ -109,8 +209,57 @@
 
   <h1>🍽️ Zamówienie posiłku</h1>
 
+  <!-- GRAFIK -->
   <div class="card">
-    <label>Załoga</label>
+    <h2>📄 Grafik</h2>
+
+    <label class="title">Wgraj grafik PDF</label>
+
+    <input
+      id="pdfFile"
+      type="file"
+      accept="application/pdf,.pdf"
+    >
+
+    <div class="small">
+      Wgraj raz w miesiącu swój grafik. Aplikacja odczyta z niego
+      tylko rejsy rozpoczynające się w WAW.
+    </div>
+
+    <div id="pdfStatus" class="status hidden"></div>
+
+    <button
+      id="clearSchedule"
+      class="secondary hidden"
+      onclick="clearSchedule()"
+    >
+      Usuń zapisany grafik
+    </button>
+
+    <div id="flightList" class="flight-list"></div>
+  </div>
+
+
+  <!-- JUTRZEJSZA TRASA -->
+  <div class="card">
+    <h2>✈️ Jutrzejszy rejs</h2>
+
+    <label class="title">Data</label>
+    <input id="date" type="text" readonly>
+
+    <div style="height:12px;"></div>
+
+    <label class="title">Trasa</label>
+
+    <div id="routeBox" class="route-box empty">
+      Wgraj grafik, aby automatycznie znaleźć trasę.
+    </div>
+  </div>
+
+
+  <!-- ZAŁOGA -->
+  <div class="card">
+    <h2>👨‍✈️ Załoga</h2>
 
     <div class="crew">
       <button onclick="chooseCrew('CPT', this)">CPT</button>
@@ -119,27 +268,10 @@
     </div>
   </div>
 
+
+  <!-- POSIŁEK -->
   <div class="card">
-    <label>Trasa</label>
-
-    <label class="route">
-      <input type="checkbox" value="LO783 RIX" onchange="updatePreview()">
-      LO783 RIX
-    </label>
-
-    <label class="route">
-      <input type="checkbox" value="LO787 TLL" onchange="updatePreview()">
-      LO787 TLL
-    </label>
-  </div>
-
-  <div class="card">
-    <label>Data zamówienia</label>
-    <input id="date" type="text" readonly>
-  </div>
-
-  <div class="card">
-    <label>Posiłek</label>
+    <h2>🍽️ Posiłek</h2>
 
     <select id="meal" onchange="updatePreview()">
       <option value="">Wybierz posiłek</option>
@@ -149,91 +281,834 @@
       <option>Ryba z warzywami</option>
       <option>Sałatka</option>
     </select>
-  </div>
 
-  <div class="card">
-    <label>Podgląd SMS</label>
-
-    <div class="preview" id="preview">
-      Wybierz załogę, trasę i posiłek.
+    <div class="small">
+      Menu później podmienimy na Twoje prawdziwe menu.
     </div>
   </div>
 
-  <button class="send" onclick="openSMS()">
-    Otwórz w Wiadomościach
-  </button>
+
+  <!-- NUMER TELEFONU -->
+  <div class="card">
+    <h2>📱 Numer telefonu</h2>
+
+    <label class="title">Numer odbiorcy SMS</label>
+
+    <input
+      id="phone"
+      type="tel"
+      placeholder="+48 123 456 789"
+      autocomplete="tel"
+      oninput="savePhone()"
+    >
+
+    <div class="small">
+      Numer zostanie zapisany w telefonie, więc nie trzeba go wpisywać
+      przy każdym zamówieniu.
+    </div>
+  </div>
+
+
+  <!-- PODGLĄD -->
+  <div class="card">
+    <h2>📨 Podgląd SMS</h2>
+
+    <div id="preview" class="preview">
+      Wybierz załogę i posiłek.
+    </div>
+
+    <button class="main" onclick="openSMS()">
+      Otwórz w Wiadomościach
+    </button>
+
+    <div class="small">
+      Wiadomość zostanie tylko przygotowana. Przed wysłaniem możesz ją
+      sprawdzić i samodzielnie nacisnąć „Wyślij”.
+    </div>
+  </div>
 
 </div>
 
-<script>
+
+<script type="module">
+
+  import * as pdfjsLib from
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs";
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+
+
   let crew = "";
 
-  function chooseCrew(value, button) {
+  let schedule = {};
+
+  /*
+    Przykład zapisanego grafiku:
+
+    {
+      "2026-08-09": ["LO771 VNO", "LO613 ZAG"],
+      "2026-08-10": ["LO405 DUS"],
+      ...
+    }
+  */
+
+
+  // -----------------------------------------
+  // DATA
+  // -----------------------------------------
+
+  function getTomorrow() {
+
+    const now = new Date();
+
+    now.setDate(now.getDate() + 1);
+
+    return {
+      day: String(now.getDate()).padStart(2, "0"),
+      month: String(now.getMonth() + 1).padStart(2, "0"),
+      year: now.getFullYear()
+    };
+  }
+
+
+  function tomorrowKey() {
+
+    const d = getTomorrow();
+
+    return `${d.year}-${d.month}-${d.day}`;
+  }
+
+
+  function tomorrowDisplay() {
+
+    const d = getTomorrow();
+
+    return `${d.day}.${d.month}.${d.year}`;
+  }
+
+
+  document.getElementById("date").value =
+    tomorrowDisplay();
+
+
+  // -----------------------------------------
+  // ZAŁOGA
+  // -----------------------------------------
+
+  window.chooseCrew = function(value, button) {
+
     crew = value;
 
-    document.querySelectorAll(".crew button").forEach(btn => {
-      btn.classList.remove("active");
-    });
+    document
+      .querySelectorAll(".crew button")
+      .forEach(btn => btn.classList.remove("active"));
 
     button.classList.add("active");
+
+    updatePreview();
+  };
+
+
+  // -----------------------------------------
+  // NUMER TELEFONU
+  // -----------------------------------------
+
+  function loadPhone() {
+
+    const phone =
+      localStorage.getItem("mealOrderPhone") || "";
+
+    document.getElementById("phone").value = phone;
+  }
+
+
+  window.savePhone = function() {
+
+    const phone =
+      document.getElementById("phone").value.trim();
+
+    localStorage.setItem(
+      "mealOrderPhone",
+      phone
+    );
+
+    updatePreview();
+  };
+
+
+  loadPhone();
+
+
+  // -----------------------------------------
+  // PDF
+  // -----------------------------------------
+
+  document
+    .getElementById("pdfFile")
+    .addEventListener("change", async function(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      if (file.type !== "application/pdf") {
+
+        showStatus(
+          "To nie wygląda na plik PDF.",
+          "warning"
+        );
+
+        return;
+      }
+
+      showStatus(
+        "Czytam grafik PDF...",
+        ""
+      );
+
+      try {
+
+        const text =
+          await readPDF(file);
+
+        schedule =
+          parseSchedule(text);
+
+        localStorage.setItem(
+          "mealSchedule",
+          JSON.stringify(schedule)
+        );
+
+        showStatus(
+          "Grafik został odczytany i zapisany w telefonie.",
+          "success"
+        );
+
+        document
+          .getElementById("clearSchedule")
+          .classList.remove("hidden");
+
+        showSchedule();
+
+        updateTomorrowRoute();
+
+      } catch(error) {
+
+        console.error(error);
+
+        showStatus(
+          "Nie udało się odczytać PDF-a. Sprawdź, czy jest to tekstowy PDF z grafikiem.",
+          "warning"
+        );
+      }
+
+    });
+
+
+  async function readPDF(file) {
+
+    const arrayBuffer =
+      await file.arrayBuffer();
+
+    const pdf =
+      await pdfjsLib.getDocument({
+        data: arrayBuffer
+      }).promise;
+
+    let fullText = "";
+
+    for (
+      let pageNumber = 1;
+      pageNumber <= pdf.numPages;
+      pageNumber++
+    ) {
+
+      const page =
+        await pdf.getPage(pageNumber);
+
+      const content =
+        await page.getTextContent();
+
+      const items =
+        content.items;
+
+      let pageText = "";
+
+      let lastY = null;
+
+      for (const item of items) {
+
+        const y =
+          item.transform
+            ? item.transform[5]
+            : null;
+
+        if (
+          lastY !== null &&
+          y !== null &&
+          Math.abs(y - lastY) > 3
+        ) {
+          pageText += "\n";
+        }
+
+        pageText += item.str + " ";
+
+        lastY = y;
+      }
+
+      fullText += "\n" + pageText;
+    }
+
+    return fullText;
+  }
+
+
+  // -----------------------------------------
+  // ODCZYT GRAFIKU
+  // -----------------------------------------
+
+  function parseSchedule(text) {
+
+    const result = {};
+
+    /*
+      Z Twojego PDF-a wiemy, że okres jest np.:
+
+      Period: 01Aug26 - 31Aug26
+
+      Pobieramy miesiąc i rok.
+    */
+
+    let periodMatch =
+      text.match(
+        /Period:\s*\d{2}([A-Za-z]{3})(\d{2})\s*-\s*\d{2}[A-Za-z]{3}\d{2}/i
+      );
+
+    let month;
+    let year;
+
+    if (periodMatch) {
+
+      month =
+        monthNumber(periodMatch[1]);
+
+      year =
+        2000 + Number(periodMatch[2]);
+
+    } else {
+
+      /*
+        Awaryjnie używamy bieżącego miesiąca i roku.
+      */
+
+      const now = new Date();
+
+      month =
+        now.getMonth() + 1;
+
+      year =
+        now.getFullYear();
+    }
+
+
+    /*
+      Normalizujemy tekst.
+    */
+
+    const lines =
+      text
+        .replace(/\r/g, "")
+        .split("\n")
+        .map(line => line.trim())
+        .filter(Boolean);
+
+
+    let currentDate = null;
+
+
+    for (const line of lines) {
+
+      /*
+        Szukamy początku dnia:
+
+        01. Sat
+        09. Sun
+        31. Mon
+      */
+
+      const dateMatch =
+        line.match(/^(\d{1,2})\.\s*[A-Za-z]{3}/);
+
+      if (dateMatch) {
+
+        const day =
+          Number(dateMatch[1]);
+
+        currentDate =
+          `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+        /*
+          Tworzymy pustą listę.
+        */
+
+        if (!result[currentDate]) {
+          result[currentDate] = [];
+        }
+      }
+
+
+      /*
+        Interesują nas tylko linie zaczynające się
+        od LO i zawierające WAW jako lotnisko wylotu.
+
+        Przykład z grafiku:
+
+        LO 771 WAW 0945 1050 VNO E76
+
+        Wynik:
+
+        LO771 VNO
+      */
+
+      if (currentDate) {
+
+        const flightMatch =
+          line.match(
+            /^LO\s*(\d+)\s+WAW\s+\d{3,4}\s+\d{3,4}\s+([A-Z]{3})(?:\s|$)/i
+          );
+
+        if (flightMatch) {
+
+          const flightNumber =
+            flightMatch[1];
+
+          const destination =
+            flightMatch[2].toUpperCase();
+
+          const flight =
+            `LO${flightNumber} ${destination}`;
+
+          if (
+            !result[currentDate].includes(flight)
+          ) {
+
+            result[currentDate].push(flight);
+          }
+        }
+      }
+    }
+
+
+    /*
+      Usuwamy dni, w których nie ma żadnego
+      rejsu WAW -> inne lotnisko.
+    */
+
+    for (const key of Object.keys(result)) {
+
+      if (result[key].length === 0) {
+        delete result[key];
+      }
+    }
+
+
+    return result;
+  }
+
+
+  function monthNumber(name) {
+
+    const months = {
+
+      jan: 1,
+      feb: 2,
+      mar: 3,
+      apr: 4,
+      may: 5,
+      jun: 6,
+      jul: 7,
+      aug: 8,
+      sep: 9,
+      oct: 10,
+      nov: 11,
+      dec: 12
+
+    };
+
+    return months[
+      name.substring(0, 3).toLowerCase()
+    ] || null;
+  }
+
+
+  // -----------------------------------------
+  // JUTRZEJSZY REJS
+  // -----------------------------------------
+
+  function getTomorrowFlights() {
+
+    const key =
+      tomorrowKey();
+
+    return schedule[key] || [];
+  }
+
+
+  function getTomorrowRoute() {
+
+    return getTomorrowFlights().join(" ");
+  }
+
+
+  function updateTomorrowRoute() {
+
+    const box =
+      document.getElementById("routeBox");
+
+    const flights =
+      getTomorrowFlights();
+
+    if (flights.length === 0) {
+
+      box.classList.add("empty");
+
+      box.textContent =
+        "Brak rejsu z WAW na jutro w zapisanym grafiku.";
+
+    } else {
+
+      box.classList.remove("empty");
+
+      box.textContent =
+        flights.join(" ");
+    }
+
     updatePreview();
   }
 
-  function tomorrowDate() {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
 
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
+  // -----------------------------------------
+  // PODGLĄD SMS
+  // -----------------------------------------
 
-    return `${day}.${month}.${year}`;
-  }
+  window.updatePreview = function() {
 
-  document.getElementById("date").value = tomorrowDate();
+    const meal =
+      document.getElementById("meal").value;
 
-  function getRoutes() {
-    return Array.from(
-      document.querySelectorAll(".route input:checked")
-    ).map(input => input.value).join(" ");
-  }
+    const route =
+      getTomorrowRoute();
 
-  function updatePreview() {
-    const meal = document.getElementById("meal").value;
-    const routes = getRoutes();
-    const date = document.getElementById("date").value;
+    const date =
+      document.getElementById("date").value;
 
-    if (!crew || !routes || !meal) {
+
+    if (!crew || !route || !meal) {
+
       document.getElementById("preview").textContent =
-        "Wybierz załogę, trasę i posiłek.";
+        "Wybierz załogę i posiłek oraz upewnij się, że grafik zawiera jutrzejszy rejs z WAW.";
+
       return;
     }
+
 
     const message =
 `Dzień dobry,
 ${crew}
 ${date}
-${routes}
+${route}
 ${meal}`;
 
-    document.getElementById("preview").textContent = message;
-  }
 
-  function openSMS() {
-    const message = document.getElementById("preview").textContent;
+    document.getElementById("preview").textContent =
+      message;
+  };
 
-    if (
-      !crew ||
-      !getRoutes() ||
-      !document.getElementById("meal").value
-    ) {
-      alert("Najpierw wybierz załogę, trasę i posiłek.");
+
+  // -----------------------------------------
+  // SMS
+  // -----------------------------------------
+
+  window.openSMS = function() {
+
+    const phone =
+      document.getElementById("phone").value.trim();
+
+    const meal =
+      document.getElementById("meal").value;
+
+    const route =
+      getTomorrowRoute();
+
+    const date =
+      document.getElementById("date").value;
+
+
+    if (!phone) {
+
+      alert(
+        "Najpierw wpisz numer telefonu."
+      );
+
       return;
     }
 
+
+    if (!crew) {
+
+      alert(
+        "Najpierw wybierz CPT, FO albo CC."
+      );
+
+      return;
+    }
+
+
+    if (!route) {
+
+      alert(
+        "Brak jutrzejszego rejsu z WAW w zapisanym grafiku."
+      );
+
+      return;
+    }
+
+
+    if (!meal) {
+
+      alert(
+        "Najpierw wybierz posiłek."
+      );
+
+      return;
+    }
+
+
+    const message =
+`Dzień dobry,
+${crew}
+${date}
+${route}
+${meal}`;
+
+
+    const smsUrl =
+      "sms:" +
+      encodeURIComponent(phone) +
+      "&body=" +
+      encodeURIComponent(message);
+
+
     window.location.href =
-      "sms:?&body=" + encodeURIComponent(message);
+      smsUrl;
+  };
+
+
+  // -----------------------------------------
+  // POKAŻ ZAPISANY GRAFIK
+  // -----------------------------------------
+
+  function showSchedule() {
+
+    const container =
+      document.getElementById("flightList");
+
+    container.innerHTML = "";
+
+
+    const keys =
+      Object.keys(schedule).sort();
+
+
+    if (keys.length === 0) {
+
+      return;
+    }
+
+
+    const title =
+      document.createElement("div");
+
+    title.style.fontWeight = "700";
+    title.style.marginBottom = "8px";
+
+    title.textContent =
+      "Odczytane rejsy z WAW:";
+
+    container.appendChild(title);
+
+
+    for (const key of keys) {
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "flight-day";
+
+
+      const date =
+        document.createElement("div");
+
+      date.className =
+        "flight-date";
+
+      date.textContent =
+        formatDateKey(key);
+
+
+      const flights =
+        document.createElement("div");
+
+      flights.className =
+        "flight-route";
+
+      flights.textContent =
+        schedule[key].join(" ");
+
+
+      row.appendChild(date);
+      row.appendChild(flights);
+
+      container.appendChild(row);
+    }
   }
+
+
+  function formatDateKey(key) {
+
+    const parts =
+      key.split("-");
+
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+  }
+
+
+  // -----------------------------------------
+  // USUNIĘCIE GRAFIKU
+  // -----------------------------------------
+
+  window.clearSchedule = function() {
+
+    const confirmed =
+      confirm(
+        "Usunąć zapisany grafik z telefonu?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    localStorage.removeItem(
+      "mealSchedule"
+    );
+
+    schedule = {};
+
+
+    document
+      .getElementById("flightList")
+      .innerHTML = "";
+
+
+    document
+      .getElementById("clearSchedule")
+      .classList.add("hidden");
+
+
+    document
+      .getElementById("pdfFile")
+      .value = "";
+
+
+    showStatus(
+      "Grafik został usunięty.",
+      ""
+    );
+
+
+    updateTomorrowRoute();
+  };
+
+
+  // -----------------------------------------
+  // STATUS
+  // -----------------------------------------
+
+  function showStatus(text, type) {
+
+    const element =
+      document.getElementById("pdfStatus");
+
+    element.textContent =
+      text;
+
+    element.className =
+      "status";
+
+    if (type === "success") {
+      element.classList.add("success");
+    }
+
+    if (type === "warning") {
+      element.classList.add("warning");
+    }
+
+    element.classList.remove("hidden");
+  }
+
+
+  // -----------------------------------------
+  // ODCZYT GRAFIKU Z PAMIĘCI
+  // -----------------------------------------
+
+  function loadSchedule() {
+
+    const saved =
+      localStorage.getItem(
+        "mealSchedule"
+      );
+
+    if (!saved) {
+      return;
+    }
+
+
+    try {
+
+      schedule =
+        JSON.parse(saved);
+
+      document
+        .getElementById("clearSchedule")
+        .classList.remove("hidden");
+
+      showStatus(
+        "Zapisany grafik jest dostępny w telefonie.",
+        "success"
+      );
+
+      showSchedule();
+
+      updateTomorrowRoute();
+
+    } catch(error) {
+
+      console.error(error);
+
+      localStorage.removeItem(
+        "mealSchedule"
+      );
+    }
+  }
+
+
+  loadSchedule();
+
 </script>
 
 </body>
