@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zamówienie posiłku</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f4f7f7;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+
+    .app {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      background: white;
+    }
+
+    .crew {
+      display: flex;
+      gap: 8px;
+    }
+
+    .crew button {
+      flex: 1;
+      padding: 14px 8px;
+      border: 1px solid #bbb;
+      border-radius: 10px;
+      background: white;
+      font-size: 16px;
+    }
+
+    .crew button.active {
+      background: #168c83;
+      color: white;
+      border-color: #168c83;
+    }
+
+    .route {
+      display: block;
+      margin: 10px 0;
+      font-weight: normal;
+    }
+
+    .route input {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .preview {
+      white-space: pre-line;
+      background: #f1f1f1;
+      padding: 15px;
+      border-radius: 10px;
+      line-height: 1.5;
+    }
+
+    .send {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      background: #168c83;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .send:active {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>🍽️ Zamówienie posiłku</h1>
+
+  <div class="card">
+    <label>Załoga</label>
+
+    <div class="crew">
+      <button onclick="chooseCrew('CPT', this)">CPT</button>
+      <button onclick="chooseCrew('FO', this)">FO</button>
+      <button onclick="chooseCrew('CC', this)">CC</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Trasa</label>
+
+    <label class="route">
+      <input type="checkbox" value="LO783 RIX" onchange="updatePreview()">
+      LO783 RIX
+    </label>
+
+    <label class="route">
+      <input type="checkbox" value="LO787 TLL" onchange="updatePreview()">
+      LO787 TLL
+    </label>
+  </div>
+
+  <div class="card">
+    <label>Data zamówienia</label>
+    <input id="date" type="text" readonly>
+  </div>
+
+  <div class="card">
+    <label>Posiłek</label>
+
+    <select id="meal" onchange="updatePreview()">
+      <option value="">Wybierz posiłek</option>
+      <option>Makaron ryżowy z sosem wieprzowym</option>
+      <option>Kurczak z ryżem</option>
+      <option>Schabowy z ziemniakami</option>
+      <option>Ryba z warzywami</option>
+      <option>Sałatka</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <label>Podgląd SMS</label>
+
+    <div class="preview" id="preview">
+      Wybierz załogę, trasę i posiłek.
+    </div>
+  </div>
+
+  <button class="send" onclick="openSMS()">
+    Otwórz w Wiadomościach
+  </button>
+
+</div>
+
+<script>
+  let crew = "";
+
+  function chooseCrew(value, button) {
+    crew = value;
+
+    document.querySelectorAll(".crew button").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    updatePreview();
+  }
+
+  function tomorrowDate() {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}.${month}.${year}`;
+  }
+
+  document.getElementById("date").value = tomorrowDate();
+
+  function getRoutes() {
+    return Array.from(
+      document.querySelectorAll(".route input:checked")
+    ).map(input => input.value).join(" ");
+  }
+
+  function updatePreview() {
+    const meal = document.getElementById("meal").value;
+    const routes = getRoutes();
+    const date = document.getElementById("date").value;
+
+    if (!crew || !routes || !meal) {
+      document.getElementById("preview").textContent =
+        "Wybierz załogę, trasę i posiłek.";
+      return;
+    }
+
+    const message =
+`Dzień dobry,
+${crew}
+${date}
+${routes}
+${meal}`;
+
+    document.getElementById("preview").textContent = message;
+  }
+
+  function openSMS() {
+    const message = document.getElementById("preview").textContent;
+
+    if (
+      !crew ||
+      !getRoutes() ||
+      !document.getElementById("meal").value
+    ) {
+      alert("Najpierw wybierz załogę, trasę i posiłek.");
+      return;
+    }
+
+    window.location.href =
+      "sms:?&body=" + encodeURIComponent(message);
+  }
+</script>
+
+</body>
+</html>
