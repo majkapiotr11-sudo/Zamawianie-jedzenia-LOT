@@ -416,11 +416,15 @@
 
   function loadPhone() {
 
-    const phone =
-      localStorage.getItem("mealOrderPhone") || "";
+    const phone = "+48 887 500 587";
 
     document.getElementById("phone").value = phone;
-  }
+
+    localStorage.setItem(
+      "mealOrderPhone",
+      phone
+    );
+}
 
 
   window.savePhone = function() {
