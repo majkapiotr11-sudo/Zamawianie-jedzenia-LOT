@@ -1,1 +1,1 @@
-LOT Catering# Zamawianie-jedzenia-LOT
+LOT Catering
