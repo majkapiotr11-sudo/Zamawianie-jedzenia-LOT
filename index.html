@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-title" content="Zamówienie">
   <title>Zamówienie posiłku</title>
 
-  <!-- Biblioteka do odczytu tekstowego PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs"
           type="module"></script>
 
@@ -27,9 +26,9 @@
     }
 
     .app {
-      max-width: 520px;
+      max-width: 560px;
       margin: 0 auto;
-      padding-bottom: 30px;
+      padding-bottom: 40px;
     }
 
     h1 {
@@ -57,7 +56,6 @@
       margin-bottom: 8px;
     }
 
-    input[type="text"],
     input[type="tel"],
     select {
       width: 100%;
@@ -88,6 +86,16 @@
       color: #176b65;
       font-size: 14px;
       line-height: 1.4;
+    }
+
+    .success {
+      background: #eaf7ed;
+      color: #226b34;
+    }
+
+    .warning {
+      background: #fff7df;
+      color: #765b00;
     }
 
     .crew {
@@ -160,45 +168,160 @@
       margin-top: 10px;
     }
 
+    button.danger {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #c44;
+      border-radius: 11px;
+      background: white;
+      color: #b22;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
     button:active {
       opacity: 0.75;
     }
 
     .hidden {
-      display: none;
+      display: none !important;
     }
 
-    .success {
-      background: #eaf7ed;
-      color: #226b34;
+    /* KALENDARZ */
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
 
-    .warning {
-      background: #fff7df;
-      color: #765b00;
+    .calendar-title {
+      font-size: 19px;
+      font-weight: 700;
+      text-transform: capitalize;
     }
 
-    .flight-list {
+    .calendar-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    .calendar-nav button {
+      width: 42px;
+      height: 38px;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 9px;
+      font-size: 18px;
+    }
+
+    .weekdays,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 11px;
+      color: #777;
+      padding: 4px 0;
+      font-weight: 600;
+    }
+
+    .day {
+      min-height: 68px;
+      border: 1px solid #ddd;
+      border-radius: 9px;
+      background: #fafafa;
+      padding: 5px;
+      position: relative;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .day.empty {
+      border: none;
+      background: transparent;
+    }
+
+    .day.has-flight {
+      background: #eaf7f5;
+      border-color: #78c8c0;
+      cursor: pointer;
+    }
+
+    .day.selected {
+      border: 3px solid #168c83;
+      padding: 3px;
+    }
+
+    .day-number {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .day-route {
+      margin-top: 5px;
+      font-size: 9px;
+      line-height: 1.2;
+      word-break: break-word;
+      color: #176b65;
+      font-weight: 600;
+    }
+
+    .planned-dot {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      width: 8px;
+      height: 8px;
+      background: #168c83;
+      border-radius: 50%;
+    }
+
+    .selected-day-info {
+      margin-top: 15px;
+      background: #f1f7f6;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .selected-day-date {
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    .selected-day-route {
+      margin-top: 5px;
+      font-family: monospace;
+      font-size: 15px;
+    }
+
+    .planned-list {
       margin-top: 12px;
     }
 
-    .flight-day {
-      border-top: 1px solid #ddd;
-      padding: 10px 0;
+    .planned-item {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 11px;
+      margin-top: 8px;
+      font-size: 14px;
     }
 
-    .flight-day:first-child {
-      border-top: none;
-    }
-
-    .flight-date {
-      font-weight: 700;
+    .planned-item strong {
+      display: block;
       margin-bottom: 4px;
     }
 
-    .flight-route {
-      font-family: monospace;
-      font-size: 15px;
+    .empty-message {
+      color: #777;
+      font-size: 14px;
+      padding: 8px 0;
     }
   </style>
 </head>
@@ -209,122 +332,256 @@
 
   <h1>🍽️ Zamówienie posiłku</h1>
 
-  <!-- GRAFIK -->
+  <!-- PDF -->
   <div class="card">
     <h2>📄 Grafik</h2>
 
     <label class="title">Wgraj grafik PDF</label>
 
-    <input
-      id="pdfFile"
-      type="file"
-      accept="application/pdf,.pdf"
-    >
+    <input id="pdfFile"
+           type="file"
+           accept="application/pdf,.pdf">
 
     <div class="small">
-      Wgraj raz w miesiącu swój grafik. Aplikacja odczyta z niego
-      tylko rejsy rozpoczynające się w WAW.
+      Wgraj grafik raz w miesiącu. Aplikacja odczyta tylko
+      rejsy rozpoczynające się w WAW.
     </div>
 
     <div id="pdfStatus" class="status hidden"></div>
 
-    <button
-      id="clearSchedule"
-      class="secondary hidden"
-      onclick="clearSchedule()"
-    >
+    <button id="clearSchedule"
+            class="danger hidden"
+            onclick="clearSchedule()">
       Usuń zapisany grafik
     </button>
-
-    <div id="flightList" class="flight-list"></div>
   </div>
 
 
-  <!-- JUTRZEJSZA TRASA -->
+  <!-- KALENDARZ -->
   <div class="card">
-    <h2>✈️ Jutrzejszy rejs</h2>
 
-    <label class="title">Data</label>
-    <input id="date" type="text" readonly>
+    <h2>📅 Plan zamówień</h2>
 
-    <div style="height:12px;"></div>
+    <div id="calendarArea">
 
-    <label class="title">Trasa</label>
+      <div class="calendar-header">
 
-    <div id="routeBox" class="route-box empty">
-      Wgraj grafik, aby automatycznie znaleźć trasę.
+        <div id="calendarTitle"
+             class="calendar-title">
+          —
+        </div>
+
+        <div class="calendar-nav">
+          <button onclick="changeMonth(-1)">‹</button>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+
+      </div>
+
+      <div class="weekdays">
+        <div class="weekday">PN</div>
+        <div class="weekday">WT</div>
+        <div class="weekday">ŚR</div>
+        <div class="weekday">CZW</div>
+        <div class="weekday">PT</div>
+        <div class="weekday">SOB</div>
+        <div class="weekday">ND</div>
+      </div>
+
+      <div id="calendarGrid"
+           class="calendar-grid">
+      </div>
+
+      <div id="selectedDayInfo"
+           class="selected-day-info hidden">
+
+        <div id="selectedDayDate"
+             class="selected-day-date">
+        </div>
+
+        <div id="selectedDayRoute"
+             class="selected-day-route">
+        </div>
+
+      </div>
+
     </div>
+
+    <div class="small">
+      Dni z rejsami z WAW są zaznaczone. Kliknij dzień,
+      aby zaplanować zamówienie.
+    </div>
+
   </div>
 
 
-  <!-- ZAŁOGA -->
-  <div class="card">
-    <h2>👨‍✈️ Załoga</h2>
+  <!-- PLANOWANIE -->
+  <div id="planningCard"
+       class="card hidden">
+
+    <h2>🍽️ Zamówienie na wybrany dzień</h2>
+
+    <div id="planningDate"
+         class="selected-day-date">
+    </div>
+
+    <div style="height:8px;"></div>
+
+    <div id="planningRoute"
+         class="route-box">
+    </div>
+
+    <div style="height:15px;"></div>
+
+    <label class="title">Załoga</label>
 
     <div class="crew">
-      <button onclick="chooseCrew('CPT', this)">CPT</button>
-      <button onclick="chooseCrew('FO', this)">FO</button>
-      <button onclick="chooseCrew('CC', this)">CC</button>
+
+      <button onclick="choosePlanningCrew('CPT', this)">
+        CPT
+      </button>
+
+      <button onclick="choosePlanningCrew('FO', this)">
+        FO
+      </button>
+
+      <button onclick="choosePlanningCrew('CC', this)">
+        CC
+      </button>
+
     </div>
-  </div>
 
+    <div style="height:15px;"></div>
 
-  <!-- POSIŁEK -->
-  <div class="card">
-    <h2>🍽️ Posiłek</h2>
+    <label class="title">Posiłek</label>
 
-    <select id="meal" onchange="updatePreview()">
+    <select id="planningMeal"
+            onchange="updatePlanningPreview()">
+
       <option value="">Wybierz posiłek</option>
-      <option>Makaron ryżowy z sosem wieprzowym</option>
-      <option>Kurczak z ryżem</option>
-      <option>Schabowy z ziemniakami</option>
-      <option>Ryba z warzywami</option>
-      <option>Sałatka</option>
+
+      <option>
+        Makaron ryżowy z sosem wieprzowym
+      </option>
+
+      <option>
+        Kurczak z ryżem
+      </option>
+
+      <option>
+        Schabowy z ziemniakami
+      </option>
+
+      <option>
+        Ryba z warzywami
+      </option>
+
+      <option>
+        Sałatka
+      </option>
+
     </select>
 
-    <div class="small">
-      Menu później podmienimy na Twoje prawdziwe menu.
-    </div>
-  </div>
+    <div style="height:15px;"></div>
 
+    <label class="title">Podgląd SMS</label>
 
-  <!-- NUMER TELEFONU -->
-  <div class="card">
-    <h2>📱 Numer telefonu</h2>
-
-    <label class="title">Numer odbiorcy SMS</label>
-
-    <input
-      id="phone"
-      type="tel"
-      placeholder="+48 123 456 789"
-      autocomplete="tel"
-      oninput="savePhone()"
-    >
-
-    <div class="small">
-      Numer zostanie zapisany w telefonie, więc nie trzeba go wpisywać
-      przy każdym zamówieniu.
-    </div>
-  </div>
-
-
-  <!-- PODGLĄD -->
-  <div class="card">
-    <h2>📨 Podgląd SMS</h2>
-
-    <div id="preview" class="preview">
+    <div id="planningPreview"
+         class="preview">
       Wybierz załogę i posiłek.
     </div>
 
-    <button class="main" onclick="openSMS()">
+    <button class="main"
+            onclick="savePlannedOrder()">
+      💾 Zapisz zamówienie
+    </button>
+
+    <button class="danger"
+            onclick="deletePlannedOrder()">
+      Usuń zamówienie z tego dnia
+    </button>
+
+  </div>
+
+
+  <!-- ZAPLANOWANE -->
+  <div class="card">
+
+    <h2>📋 Zaplanowane zamówienia</h2>
+
+    <div id="plannedOrders"
+         class="planned-list">
+
+      <div class="empty-message">
+        Brak zaplanowanych zamówień.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- NUMER -->
+  <div class="card">
+
+    <h2>📱 Numer telefonu</h2>
+
+    <label class="title">
+      Numer odbiorcy SMS
+    </label>
+
+    <input id="phone"
+           type="tel"
+           placeholder="+48 123 456 789"
+           autocomplete="tel"
+           oninput="savePhone()">
+
+    <div class="small">
+      Numer zostaje zapisany w telefonie.
+    </div>
+
+  </div>
+
+
+  <!-- STARY PODGLĄD JUTRA -->
+  <div class="card">
+
+    <h2>✈️ Jutrzejszy rejs</h2>
+
+    <div id="tomorrowDate"
+         class="selected-day-date">
+    </div>
+
+    <div style="height:8px;"></div>
+
+    <div id="tomorrowRoute"
+         class="route-box empty">
+      Brak danych.
+    </div>
+
+  </div>
+
+
+  <!-- SMS -->
+  <div class="card">
+
+    <h2>📨 SMS na jutro</h2>
+
+    <div id="preview"
+         class="preview">
+      Wybierz dane zamówienia.
+    </div>
+
+    <button class="main"
+            onclick="openSMS()">
       Otwórz w Wiadomościach
     </button>
 
     <div class="small">
-      Wiadomość zostanie tylko przygotowana. Przed wysłaniem możesz ją
-      sprawdzić i samodzielnie nacisnąć „Wyślij”.
+      SMS nie jest wysyłany automatycznie. Najpierw otwierają się
+      Wiadomości, gdzie możesz sprawdzić treść i sam nacisnąć „Wyślij”.
     </div>
+
   </div>
 
 </div>
@@ -332,786 +589,1457 @@
 
 <script type="module">
 
-  import * as pdfjsLib from
-    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs";
+import * as pdfjsLib from
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs";
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
-
-
-  let crew = "";
-
-  let schedule = {};
-
-  /*
-    Przykład zapisanego grafiku:
-
-    {
-      "2026-08-09": ["LO771 VNO", "LO613 ZAG"],
-      "2026-08-10": ["LO405 DUS"],
-      ...
-    }
-  */
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
 
 
-  // -----------------------------------------
-  // DATA
-  // -----------------------------------------
+let schedule = {};
 
-  function getTomorrow() {
+let plannedOrders =
+JSON.parse(
+  localStorage.getItem("plannedOrders") || "{}"
+);
 
-    const now = new Date();
+let selectedDate = null;
 
-    now.setDate(now.getDate() + 1);
+let calendarYear =
+new Date().getFullYear();
 
-    return {
-      day: String(now.getDate()).padStart(2, "0"),
-      month: String(now.getMonth() + 1).padStart(2, "0"),
-      year: now.getFullYear()
-    };
-  }
+let calendarMonth =
+new Date().getMonth();
 
+let planningCrew = "";
 
-  function tomorrowKey() {
-
-    const d = getTomorrow();
-
-    return `${d.year}-${d.month}-${d.day}`;
-  }
+let smsCrew = "";
 
 
-  function tomorrowDisplay() {
+/* =========================
+   DATA
+========================= */
 
-    const d = getTomorrow();
+function formatKey(year, month, day) {
 
-    return `${d.day}.${d.month}.${d.year}`;
-  }
-
-
-  document.getElementById("date").value =
-    tomorrowDisplay();
-
-
-  // -----------------------------------------
-  // ZAŁOGA
-  // -----------------------------------------
-
-  window.chooseCrew = function(value, button) {
-
-    crew = value;
-
-    document
-      .querySelectorAll(".crew button")
-      .forEach(btn => btn.classList.remove("active"));
-
-    button.classList.add("active");
-
-    updatePreview();
-  };
-
-
-  // -----------------------------------------
-  // NUMER TELEFONU
-  // -----------------------------------------
-
-  function loadPhone() {
-
-    const phone = "+48 887 500 587";
-
-    document.getElementById("phone").value = phone;
-
-    localStorage.setItem(
-      "mealOrderPhone",
-      phone
-    );
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 
-  window.savePhone = function() {
+function displayDate(key) {
 
-    const phone =
-      document.getElementById("phone").value.trim();
+  const parts = key.split("-");
+
+  return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
+
+
+function getTomorrow() {
+
+  const d = new Date();
+
+  d.setDate(d.getDate() + 1);
+
+  return formatKey(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate()
+  );
+}
+
+
+/* =========================
+   PDF
+========================= */
+
+document
+.getElementById("pdfFile")
+.addEventListener("change", async function(event) {
+
+  const file =
+  event.target.files[0];
+
+  if (!file) return;
+
+  showStatus(
+    "Czytam grafik PDF...",
+    ""
+  );
+
+  try {
+
+    const text =
+    await readPDF(file);
+
+    schedule =
+    parseSchedule(text);
 
     localStorage.setItem(
-      "mealOrderPhone",
-      phone
+      "mealSchedule",
+      JSON.stringify(schedule)
     );
 
-    updatePreview();
-  };
-
-
-  loadPhone();
-
-
-  // -----------------------------------------
-  // PDF
-  // -----------------------------------------
-
-  document
-    .getElementById("pdfFile")
-    .addEventListener("change", async function(event) {
-
-      const file = event.target.files[0];
-
-      if (!file) {
-        return;
-      }
-
-      if (file.type !== "application/pdf") {
-
-        showStatus(
-          "To nie wygląda na plik PDF.",
-          "warning"
-        );
-
-        return;
-      }
-
-      showStatus(
-        "Czytam grafik PDF...",
-        ""
-      );
-
-      try {
-
-        const text =
-          await readPDF(file);
-
-        schedule =
-          parseSchedule(text);
-
-        localStorage.setItem(
-          "mealSchedule",
-          JSON.stringify(schedule)
-        );
-
-        showStatus(
-          "Grafik został odczytany i zapisany w telefonie.",
-          "success"
-        );
-
-        document
-          .getElementById("clearSchedule")
-          .classList.remove("hidden");
-
-        showSchedule();
-
-        updateTomorrowRoute();
-
-      } catch(error) {
-
-        console.error(error);
-
-        showStatus(
-          "Nie udało się odczytać PDF-a. Sprawdź, czy jest to tekstowy PDF z grafikiem.",
-          "warning"
-        );
-      }
-
-    });
-
-
-  async function readPDF(file) {
-
-    const arrayBuffer =
-      await file.arrayBuffer();
-
-    const pdf =
-      await pdfjsLib.getDocument({
-        data: arrayBuffer
-      }).promise;
-
-    let fullText = "";
-
-    for (
-      let pageNumber = 1;
-      pageNumber <= pdf.numPages;
-      pageNumber++
-    ) {
-
-      const page =
-        await pdf.getPage(pageNumber);
-
-      const content =
-        await page.getTextContent();
-
-      const items =
-        content.items;
-
-      let pageText = "";
-
-      let lastY = null;
-
-      for (const item of items) {
-
-        const y =
-          item.transform
-            ? item.transform[5]
-            : null;
-
-        if (
-          lastY !== null &&
-          y !== null &&
-          Math.abs(y - lastY) > 3
-        ) {
-          pageText += "\n";
-        }
-
-        pageText += item.str + " ";
-
-        lastY = y;
-      }
-
-      fullText += "\n" + pageText;
-    }
-
-    return fullText;
-  }
-
-
-  // -----------------------------------------
-  // ODCZYT GRAFIKU
-  // -----------------------------------------
-
-  function parseSchedule(text) {
-
-    const result = {};
-
-    /*
-      Z Twojego PDF-a wiemy, że okres jest np.:
-
-      Period: 01Aug26 - 31Aug26
-
-      Pobieramy miesiąc i rok.
-    */
-
-    let periodMatch =
-      text.match(
-        /Period:\s*\d{2}([A-Za-z]{3})(\d{2})\s*-\s*\d{2}[A-Za-z]{3}\d{2}/i
-      );
-
-    let month;
-    let year;
-
-    if (periodMatch) {
-
-      month =
-        monthNumber(periodMatch[1]);
-
-      year =
-        2000 + Number(periodMatch[2]);
-
-    } else {
-
-      /*
-        Awaryjnie używamy bieżącego miesiąca i roku.
-      */
-
-      const now = new Date();
-
-      month =
-        now.getMonth() + 1;
-
-      year =
-        now.getFullYear();
-    }
-
-
-    /*
-      Normalizujemy tekst.
-    */
-
-    const lines =
-      text
-        .replace(/\r/g, "")
-        .split("\n")
-        .map(line => line.trim())
-        .filter(Boolean);
-
-
-    let currentDate = null;
-
-
-    for (const line of lines) {
-
-      /*
-        Szukamy początku dnia:
-
-        01. Sat
-        09. Sun
-        31. Mon
-      */
-
-      const dateMatch =
-        line.match(/^(\d{1,2})\.\s*[A-Za-z]{3}/);
-
-      if (dateMatch) {
-
-        const day =
-          Number(dateMatch[1]);
-
-        currentDate =
-          `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-        /*
-          Tworzymy pustą listę.
-        */
-
-        if (!result[currentDate]) {
-          result[currentDate] = [];
-        }
-      }
-
-
-      /*
-        Interesują nas tylko linie zaczynające się
-        od LO i zawierające WAW jako lotnisko wylotu.
-
-        Przykład z grafiku:
-
-        LO 771 WAW 0945 1050 VNO E76
-
-        Wynik:
-
-        LO771 VNO
-      */
-
-      if (currentDate) {
-
-        const flightMatch =
-          line.match(
-            /^LO\s*(\d+)\s+WAW\s+\d{3,4}\s+\d{3,4}\s+([A-Z]{3})(?:\s|$)/i
-          );
-
-        if (flightMatch) {
-
-          const flightNumber =
-            flightMatch[1];
-
-          const destination =
-            flightMatch[2].toUpperCase();
-
-          const flight =
-            `LO${flightNumber} ${destination}`;
-
-          if (
-            !result[currentDate].includes(flight)
-          ) {
-
-            result[currentDate].push(flight);
-          }
-        }
-      }
-    }
-
-
-    /*
-      Usuwamy dni, w których nie ma żadnego
-      rejsu WAW -> inne lotnisko.
-    */
-
-    for (const key of Object.keys(result)) {
-
-      if (result[key].length === 0) {
-        delete result[key];
-      }
-    }
-
-
-    return result;
-  }
-
-
-  function monthNumber(name) {
-
-    const months = {
-
-      jan: 1,
-      feb: 2,
-      mar: 3,
-      apr: 4,
-      may: 5,
-      jun: 6,
-      jul: 7,
-      aug: 8,
-      sep: 9,
-      oct: 10,
-      nov: 11,
-      dec: 12
-
-    };
-
-    return months[
-      name.substring(0, 3).toLowerCase()
-    ] || null;
-  }
-
-
-  // -----------------------------------------
-  // JUTRZEJSZY REJS
-  // -----------------------------------------
-
-  function getTomorrowFlights() {
-
-    const key =
-      tomorrowKey();
-
-    return schedule[key] || [];
-  }
-
-
-  function getTomorrowRoute() {
-
-    return getTomorrowFlights().join(" ");
-  }
-
-
-  function updateTomorrowRoute() {
-
-    const box =
-      document.getElementById("routeBox");
-
-    const flights =
-      getTomorrowFlights();
-
-    if (flights.length === 0) {
-
-      box.classList.add("empty");
-
-      box.textContent =
-        "Brak rejsu z WAW na jutro w zapisanym grafiku.";
-
-    } else {
-
-      box.classList.remove("empty");
-
-      box.textContent =
-        flights.join(" ");
-    }
-
-    updatePreview();
-  }
-
-
-  // -----------------------------------------
-  // PODGLĄD SMS
-  // -----------------------------------------
-
-  window.updatePreview = function() {
-
-    const meal =
-      document.getElementById("meal").value;
-
-    const route =
-      getTomorrowRoute();
-
-    const date =
-      document.getElementById("date").value;
-
-
-    if (!crew || !route || !meal) {
-
-      document.getElementById("preview").textContent =
-        "Wybierz załogę i posiłek oraz upewnij się, że grafik zawiera jutrzejszy rejs z WAW.";
-
-      return;
-    }
-
-
-    const message =
-`Dzień dobry,
-${crew}
-${date}
-${route}
-${meal}`;
-
-
-    document.getElementById("preview").textContent =
-      message;
-  };
-
-
-  // -----------------------------------------
-  // SMS
-  // -----------------------------------------
-
-  window.openSMS = function() {
-
-    const phone =
-      document.getElementById("phone").value.trim();
-
-    const meal =
-      document.getElementById("meal").value;
-
-    const route =
-      getTomorrowRoute();
-
-    const date =
-      document.getElementById("date").value;
-
-
-    if (!phone) {
-
-      alert(
-        "Najpierw wpisz numer telefonu."
-      );
-
-      return;
-    }
-
-
-    if (!crew) {
-
-      alert(
-        "Najpierw wybierz CPT, FO albo CC."
-      );
-
-      return;
-    }
-
-
-    if (!route) {
-
-      alert(
-        "Brak jutrzejszego rejsu z WAW w zapisanym grafiku."
-      );
-
-      return;
-    }
-
-
-    if (!meal) {
-
-      alert(
-        "Najpierw wybierz posiłek."
-      );
-
-      return;
-    }
-
-
-    const message =
-`Dzień dobry,
-${crew}
-${date}
-${route}
-${meal}`;
-
-
-    const smsUrl =
-      "sms:" +
-      encodeURIComponent(phone) +
-      "&body=" +
-      encodeURIComponent(message);
-
-
-    window.location.href =
-      smsUrl;
-  };
-
-
-  // -----------------------------------------
-  // POKAŻ ZAPISANY GRAFIK
-  // -----------------------------------------
-
-  function showSchedule() {
-
-    const container =
-      document.getElementById("flightList");
-
-    container.innerHTML = "";
-
-
     const keys =
-      Object.keys(schedule).sort();
-
+    Object.keys(schedule);
 
     if (keys.length === 0) {
 
-      return;
-    }
-
-
-    const title =
-      document.createElement("div");
-
-    title.style.fontWeight = "700";
-    title.style.marginBottom = "8px";
-
-    title.textContent =
-      "Odczytane rejsy z WAW:";
-
-    container.appendChild(title);
-
-
-    for (const key of keys) {
-
-      const row =
-        document.createElement("div");
-
-      row.className =
-        "flight-day";
-
-
-      const date =
-        document.createElement("div");
-
-      date.className =
-        "flight-date";
-
-      date.textContent =
-        formatDateKey(key);
-
-
-      const flights =
-        document.createElement("div");
-
-      flights.className =
-        "flight-route";
-
-      flights.textContent =
-        schedule[key].join(" ");
-
-
-      row.appendChild(date);
-      row.appendChild(flights);
-
-      container.appendChild(row);
-    }
-  }
-
-
-  function formatDateKey(key) {
-
-    const parts =
-      key.split("-");
-
-    return `${parts[2]}.${parts[1]}.${parts[0]}`;
-  }
-
-
-  // -----------------------------------------
-  // USUNIĘCIE GRAFIKU
-  // -----------------------------------------
-
-  window.clearSchedule = function() {
-
-    const confirmed =
-      confirm(
-        "Usunąć zapisany grafik z telefonu?"
+      showStatus(
+        "PDF został odczytany, ale nie znaleziono rejsów WAW → inne lotnisko.",
+        "warning"
       );
 
-    if (!confirmed) {
-      return;
-    }
-
-
-    localStorage.removeItem(
-      "mealSchedule"
-    );
-
-    schedule = {};
-
-
-    document
-      .getElementById("flightList")
-      .innerHTML = "";
-
-
-    document
-      .getElementById("clearSchedule")
-      .classList.add("hidden");
-
-
-    document
-      .getElementById("pdfFile")
-      .value = "";
-
-
-    showStatus(
-      "Grafik został usunięty.",
-      ""
-    );
-
-
-    updateTomorrowRoute();
-  };
-
-
-  // -----------------------------------------
-  // STATUS
-  // -----------------------------------------
-
-  function showStatus(text, type) {
-
-    const element =
-      document.getElementById("pdfStatus");
-
-    element.textContent =
-      text;
-
-    element.className =
-      "status";
-
-    if (type === "success") {
-      element.classList.add("success");
-    }
-
-    if (type === "warning") {
-      element.classList.add("warning");
-    }
-
-    element.classList.remove("hidden");
-  }
-
-
-  // -----------------------------------------
-  // ODCZYT GRAFIKU Z PAMIĘCI
-  // -----------------------------------------
-
-  function loadSchedule() {
-
-    const saved =
-      localStorage.getItem(
-        "mealSchedule"
-      );
-
-    if (!saved) {
-      return;
-    }
-
-
-    try {
-
-      schedule =
-        JSON.parse(saved);
-
-      document
-        .getElementById("clearSchedule")
-        .classList.remove("hidden");
+    } else {
 
       showStatus(
-        "Zapisany grafik jest dostępny w telefonie.",
+        `Gotowe. Znaleziono ${keys.length} dni z rejsami z WAW.`,
         "success"
       );
 
-      showSchedule();
-
-      updateTomorrowRoute();
-
-    } catch(error) {
-
-      console.error(error);
-
-      localStorage.removeItem(
-        "mealSchedule"
-      );
     }
+
+    document
+    .getElementById("clearSchedule")
+    .classList.remove("hidden");
+
+    if (keys.length > 0) {
+
+      const first =
+      keys.sort()[0];
+
+      const parts =
+      first.split("-");
+
+      calendarYear =
+      Number(parts[0]);
+
+      calendarMonth =
+      Number(parts[1]) - 1;
+    }
+
+    renderCalendar();
+    updateTomorrow();
+    renderPlannedOrders();
+
+  } catch(error) {
+
+    console.error(error);
+
+    showStatus(
+      "Nie udało się odczytać PDF-a.",
+      "warning"
+    );
+
+  }
+
+});
+
+
+async function readPDF(file) {
+
+  const buffer =
+  await file.arrayBuffer();
+
+  const pdf =
+  await pdfjsLib
+  .getDocument({
+    data: buffer
+  })
+  .promise;
+
+  let fullText = "";
+
+  for (
+    let pageNumber = 1;
+    pageNumber <= pdf.numPages;
+    pageNumber++
+  ) {
+
+    const page =
+    await pdf.getPage(pageNumber);
+
+    const content =
+    await page.getTextContent();
+
+    let lastY = null;
+
+    for (const item of content.items) {
+
+      const y =
+      item.transform
+      ? item.transform[5]
+      : null;
+
+      if (
+        lastY !== null &&
+        y !== null &&
+        Math.abs(y - lastY) > 3
+      ) {
+
+        fullText += "\n";
+      }
+
+      fullText += item.str + " ";
+
+      lastY = y;
+    }
+
+    fullText += "\n";
+  }
+
+  return fullText;
+}
+
+
+/* =========================
+   PARSER GRAFIKU
+========================= */
+
+function parseSchedule(text) {
+
+  const result = {};
+
+  let month = null;
+  let year = null;
+
+  const period =
+  text.match(
+    /Period:\s*\d{2}([A-Za-z]{3})(\d{2})/i
+  );
+
+  if (period) {
+
+    month =
+    monthNumber(period[1]);
+
+    year =
+    2000 + Number(period[2]);
+
+  } else {
+
+    const now =
+    new Date();
+
+    month =
+    now.getMonth() + 1;
+
+    year =
+    now.getFullYear();
   }
 
 
-  loadSchedule();
+  const lines =
+  text
+  .replace(/\r/g, "")
+  .split("\n")
+  .map(x => x.trim())
+  .filter(Boolean);
+
+
+  let currentDate = null;
+
+
+  for (const line of lines) {
+
+    /*
+      Rozpoznanie dnia.
+      Przykładowo:
+      09. Sun
+    */
+
+    const dateMatch =
+    line.match(
+      /^(\d{1,2})\.\s*[A-Za-z]{3}/
+    );
+
+    if (dateMatch) {
+
+      const day =
+      Number(dateMatch[1]);
+
+      currentDate =
+      `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+      if (!result[currentDate]) {
+
+        result[currentDate] = [];
+      }
+    }
+
+
+    if (!currentDate) {
+      continue;
+    }
+
+
+    /*
+      Szukamy wyłącznie:
+
+      LO numer WAW godzina godzina DEST
+
+      Czyli np.:
+
+      LO 771 WAW 0945 1050 VNO
+
+      Nie przejdzie:
+
+      LO 772 VNO ... WAW
+    */
+
+    const flightMatch =
+    line.match(
+      /^LO\s*(\d+)\s+WAW\s+\d{3,4}\s+\d{3,4}\s+([A-Z]{3})(?:\s|$)/i
+    );
+
+
+    if (flightMatch) {
+
+      const number =
+      flightMatch[1];
+
+      const destination =
+      flightMatch[2]
+      .toUpperCase();
+
+      const value =
+      `LO${number} ${destination}`;
+
+      if (
+        !result[currentDate]
+        .includes(value)
+      ) {
+
+        result[currentDate].push(value);
+      }
+    }
+
+  }
+
+
+  for (const key of Object.keys(result)) {
+
+    if (
+      result[key].length === 0
+    ) {
+
+      delete result[key];
+    }
+
+  }
+
+
+  return result;
+}
+
+
+function monthNumber(name) {
+
+  const months = {
+
+    jan: 1,
+    feb: 2,
+    mar: 3,
+    apr: 4,
+    may: 5,
+    jun: 6,
+    jul: 7,
+    aug: 8,
+    sep: 9,
+    oct: 10,
+    nov: 11,
+    dec: 12
+
+  };
+
+  return (
+    months[
+      name.substring(0,3).toLowerCase()
+    ] || null
+  );
+}
+
+
+/* =========================
+   KALENDARZ
+========================= */
+
+function renderCalendar() {
+
+  const grid =
+  document.getElementById(
+    "calendarGrid"
+  );
+
+  const title =
+  document.getElementById(
+    "calendarTitle"
+  );
+
+  grid.innerHTML = "";
+
+
+  const monthNames = [
+
+    "styczeń",
+    "luty",
+    "marzec",
+    "kwiecień",
+    "maj",
+    "czerwiec",
+    "lipiec",
+    "sierpień",
+    "wrzesień",
+    "październik",
+    "listopad",
+    "grudzień"
+
+  ];
+
+
+  title.textContent =
+  `${monthNames[calendarMonth]} ${calendarYear}`;
+
+
+  const firstDay =
+  new Date(
+    calendarYear,
+    calendarMonth,
+    1
+  );
+
+
+  /*
+    JS:
+    niedziela = 0
+
+    My chcemy:
+    poniedziałek = 0
+  */
+
+  let start =
+  firstDay.getDay() - 1;
+
+  if (start < 0) {
+    start = 6;
+  }
+
+
+  const days =
+  new Date(
+    calendarYear,
+    calendarMonth + 1,
+    0
+  ).getDate();
+
+
+  for (
+    let i = 0;
+    i < start;
+    i++
+  ) {
+
+    const empty =
+    document.createElement("div");
+
+    empty.className =
+    "day empty";
+
+    grid.appendChild(empty);
+  }
+
+
+  for (
+    let day = 1;
+    day <= days;
+    day++
+  ) {
+
+    const key =
+    formatKey(
+      calendarYear,
+      calendarMonth,
+      day
+    );
+
+
+    const cell =
+    document.createElement("div");
+
+    cell.className =
+    "day";
+
+
+    const number =
+    document.createElement("div");
+
+    number.className =
+    "day-number";
+
+    number.textContent =
+    day;
+
+    cell.appendChild(number);
+
+
+    const flights =
+    schedule[key] || [];
+
+
+    if (flights.length > 0) {
+
+      cell.classList.add(
+        "has-flight"
+      );
+
+
+      const route =
+      document.createElement("div");
+
+      route.className =
+      "day-route";
+
+      route.textContent =
+      flights.join(" ");
+
+      cell.appendChild(route);
+
+
+      cell.onclick =
+      () => selectDate(key);
+
+    }
+
+
+    if (
+      plannedOrders[key]
+    ) {
+
+      const dot =
+      document.createElement("div");
+
+      dot.className =
+      "planned-dot";
+
+      cell.appendChild(dot);
+
+    }
+
+
+    if (
+      selectedDate === key
+    ) {
+
+      cell.classList.add(
+        "selected"
+      );
+
+    }
+
+
+    grid.appendChild(cell);
+  }
+
+}
+
+
+window.changeMonth =
+function(direction) {
+
+  calendarMonth += direction;
+
+
+  if (calendarMonth > 11) {
+
+    calendarMonth = 0;
+    calendarYear++;
+
+  }
+
+
+  if (calendarMonth < 0) {
+
+    calendarMonth = 11;
+    calendarYear--;
+
+  }
+
+
+  renderCalendar();
+
+};
+
+
+window.selectDate =
+function(key) {
+
+  selectedDate =
+  key;
+
+
+  const flights =
+  schedule[key] || [];
+
+
+  document
+  .getElementById(
+    "selectedDayInfo"
+  )
+  .classList.remove("hidden");
+
+
+  document
+  .getElementById(
+    "selectedDayDate"
+  )
+  .textContent =
+  displayDate(key);
+
+
+  document
+  .getElementById(
+    "selectedDayRoute"
+  )
+  .textContent =
+  flights.join(" ");
+
+
+  document
+  .getElementById(
+    "planningCard"
+  )
+  .classList.remove("hidden");
+
+
+  document
+  .getElementById(
+    "planningDate"
+  )
+  .textContent =
+  displayDate(key);
+
+
+  document
+  .getElementById(
+    "planningRoute"
+  )
+  .textContent =
+  flights.join(" ");
+
+
+  loadExistingPlan();
+
+  renderCalendar();
+
+};
+
+
+/* =========================
+   PLANOWANIE
+========================= */
+
+window.choosePlanningCrew =
+function(value, button) {
+
+  planningCrew =
+  value;
+
+
+  document
+  .querySelectorAll(
+    "#planningCard .crew button"
+  )
+  .forEach(
+    x => x.classList.remove("active")
+  );
+
+
+  button.classList.add(
+    "active"
+  );
+
+
+  updatePlanningPreview();
+
+};
+
+
+window.updatePlanningPreview =
+function() {
+
+  if (!selectedDate) {
+    return;
+  }
+
+
+  const meal =
+  document
+  .getElementById(
+    "planningMeal"
+  )
+  .value;
+
+
+  const route =
+  (schedule[selectedDate] || [])
+  .join(" ");
+
+
+  const date =
+  displayDate(selectedDate);
+
+
+  if (
+    !planningCrew ||
+    !meal
+  ) {
+
+    document
+    .getElementById(
+      "planningPreview"
+    )
+    .textContent =
+    "Wybierz załogę i posiłek.";
+
+    return;
+  }
+
+
+  document
+  .getElementById(
+    "planningPreview"
+  )
+  .textContent =
+`Dzień dobry,
+${planningCrew}
+${date}
+${route}
+${meal}`;
+
+};
+
+
+window.savePlannedOrder =
+function() {
+
+  if (!selectedDate) {
+
+    alert(
+      "Najpierw wybierz dzień."
+    );
+
+    return;
+  }
+
+
+  const meal =
+  document
+  .getElementById(
+    "planningMeal"
+  )
+  .value;
+
+
+  if (!planningCrew) {
+
+    alert(
+      "Wybierz CPT, FO albo CC."
+    );
+
+    return;
+  }
+
+
+  if (!meal) {
+
+    alert(
+      "Wybierz posiłek."
+    );
+
+    return;
+  }
+
+
+  plannedOrders[selectedDate] = {
+
+    crew:
+    planningCrew,
+
+    meal:
+    meal,
+
+    route:
+    (schedule[selectedDate] || [])
+    .join(" ")
+
+  };
+
+
+  localStorage.setItem(
+    "plannedOrders",
+    JSON.stringify(
+      plannedOrders
+    )
+  );
+
+
+  renderCalendar();
+
+  renderPlannedOrders();
+
+
+  alert(
+    `Zamówienie na ${displayDate(selectedDate)} zostało zapisane.`
+  );
+
+};
+
+
+window.deletePlannedOrder =
+function() {
+
+  if (!selectedDate) {
+    return;
+  }
+
+
+  if (
+    !plannedOrders[selectedDate]
+  ) {
+
+    alert(
+      "Na ten dzień nie ma zapisanego zamówienia."
+    );
+
+    return;
+  }
+
+
+  if (
+    !confirm(
+      `Usunąć zamówienie z ${displayDate(selectedDate)}?`
+    )
+  ) {
+
+    return;
+  }
+
+
+  delete plannedOrders[selectedDate];
+
+
+  localStorage.setItem(
+    "plannedOrders",
+    JSON.stringify(
+      plannedOrders
+    )
+  );
+
+
+  document
+  .getElementById(
+    "planningMeal"
+  )
+  .value = "";
+
+
+  planningCrew = "";
+
+
+  document
+  .querySelectorAll(
+    "#planningCard .crew button"
+  )
+  .forEach(
+    x => x.classList.remove("active")
+  );
+
+
+  updatePlanningPreview();
+
+  renderCalendar();
+
+  renderPlannedOrders();
+
+};
+
+
+/* =========================
+   WCZYTANIE ISTNIEJĄCEGO PLANU
+========================= */
+
+function loadExistingPlan() {
+
+  const plan =
+  plannedOrders[selectedDate];
+
+
+  if (!plan) {
+
+    planningCrew = "";
+
+    document
+    .getElementById(
+      "planningMeal"
+    )
+    .value = "";
+
+
+    document
+    .querySelectorAll(
+      "#planningCard .crew button"
+    )
+    .forEach(
+      x => x.classList.remove("active")
+    );
+
+
+    updatePlanningPreview();
+
+    return;
+  }
+
+
+  planningCrew =
+  plan.crew;
+
+
+  document
+  .getElementById(
+    "planningMeal"
+  )
+  .value =
+  plan.meal;
+
+
+  document
+  .querySelectorAll(
+    "#planningCard .crew button"
+  )
+  .forEach(
+    button => {
+
+      button.classList.toggle(
+        "active",
+        button.textContent.trim()
+        === plan.crew
+      );
+
+    }
+  );
+
+
+  updatePlanningPreview();
+
+}
+
+
+/* =========================
+   LISTA ZAMÓWIEŃ
+========================= */
+
+function renderPlannedOrders() {
+
+  const container =
+  document.getElementById(
+    "plannedOrders"
+  );
+
+
+  container.innerHTML = "";
+
+
+  const keys =
+  Object.keys(
+    plannedOrders
+  ).sort();
+
+
+  if (keys.length === 0) {
+
+    container.innerHTML =
+    `<div class="empty-message">
+      Brak zaplanowanych zamówień.
+    </div>`;
+
+    return;
+  }
+
+
+  keys.forEach(key => {
+
+    const item =
+    plannedOrders[key];
+
+
+    const div =
+    document.createElement(
+      "div"
+    );
+
+
+    div.className =
+    "planned-item";
+
+
+    div.innerHTML =
+    `<strong>${displayDate(key)}</strong>
+     ${item.crew} · ${item.route}<br>
+     ${item.meal}`;
+
+
+    div.onclick =
+    () => {
+
+      const parts =
+      key.split("-");
+
+
+      calendarYear =
+      Number(parts[0]);
+
+      calendarMonth =
+      Number(parts[1]) - 1;
+
+
+      selectDate(key);
+
+      renderCalendar();
+
+      window.scrollTo({
+        top:
+        document
+        .getElementById(
+          "planningCard"
+        )
+        .offsetTop - 20,
+        behavior:
+        "smooth"
+      });
+
+    };
+
+
+    container.appendChild(
+      div
+    );
+
+  });
+
+}
+
+
+/* =========================
+   JUTRO
+========================= */
+
+function updateTomorrow() {
+
+  const key =
+  getTomorrow();
+
+
+  document
+  .getElementById(
+    "tomorrowDate"
+  )
+  .textContent =
+  displayDate(key);
+
+
+  const route =
+  (schedule[key] || [])
+  .join(" ");
+
+
+  const box =
+  document
+  .getElementById(
+    "tomorrowRoute"
+  );
+
+
+  if (!route) {
+
+    box.classList.add(
+      "empty"
+    );
+
+    box.textContent =
+    "Brak rejsu z WAW na jutro w zapisanym grafiku.";
+
+  } else {
+
+    box.classList.remove(
+      "empty"
+    );
+
+    box.textContent =
+    route;
+
+  }
+
+
+  updateSMSPreview();
+
+}
+
+
+/* =========================
+   NUMER TELEFONU
+========================= */
+
+function loadPhone() {
+
+  const phone =
+  localStorage.getItem(
+    "mealOrderPhone"
+  ) || "";
+
+
+  document
+  .getElementById(
+    "phone"
+  )
+  .value =
+  phone;
+
+}
+
+
+window.savePhone =
+function() {
+
+  const phone =
+  document
+  .getElementById(
+    "phone"
+  )
+  .value
+  .trim();
+
+
+  localStorage.setItem(
+    "mealOrderPhone",
+    phone
+  );
+
+};
+
+
+/* =========================
+   SMS NA JUTRO
+========================= */
+
+window.updateSMSPreview =
+function() {
+
+  const route =
+  (schedule[getTomorrow()] || [])
+  .join(" ");
+
+
+  const meal =
+  plannedOrders[getTomorrow()]
+  ? plannedOrders[getTomorrow()].meal
+  : "";
+
+
+  const crew =
+  plannedOrders[getTomorrow()]
+  ? plannedOrders[getTomorrow()].crew
+  : "";
+
+
+  if (
+    !route ||
+    !meal ||
+    !crew
+  ) {
+
+    document
+    .getElementById(
+      "preview"
+    )
+    .textContent =
+    "Dla jutra nie ma jeszcze kompletnego zaplanowanego zamówienia.";
+
+    return;
+  }
+
+
+  document
+  .getElementById(
+    "preview"
+  )
+  .textContent =
+`Dzień dobry,
+${crew}
+${displayDate(getTomorrow())}
+${route}
+${meal}`;
+
+};
+
+
+window.openSMS =
+function() {
+
+  const phone =
+  document
+  .getElementById(
+    "phone"
+  )
+  .value
+  .trim();
+
+
+  const order =
+  plannedOrders[getTomorrow()];
+
+
+  if (!phone) {
+
+    alert(
+      "Najpierw wpisz numer telefonu."
+    );
+
+    return;
+  }
+
+
+  if (!order) {
+
+    alert(
+      "Nie ma zaplanowanego zamówienia na jutro."
+    );
+
+    return;
+  }
+
+
+  const message =
+`Dzień dobry,
+${order.crew}
+${displayDate(getTomorrow())}
+${order.route}
+${order.meal}`;
+
+
+  const url =
+  "sms:" +
+  encodeURIComponent(phone) +
+  "&body=" +
+  encodeURIComponent(message);
+
+
+  window.location.href =
+  url;
+
+};
+
+
+/* =========================
+   USUNIĘCIE GRAFIKU
+========================= */
+
+window.clearSchedule =
+function() {
+
+  if (
+    !confirm(
+      "Usunąć zapisany grafik?"
+    )
+  ) {
+
+    return;
+  }
+
+
+  localStorage.removeItem(
+    "mealSchedule"
+  );
+
+
+  schedule = {};
+
+
+  document
+  .getElementById(
+    "pdfFile"
+  )
+  .value = "";
+
+
+  document
+  .getElementById(
+    "clearSchedule"
+  )
+  .classList.add(
+    "hidden"
+  );
+
+
+  document
+  .getElementById(
+    "pdfStatus"
+  )
+  .className =
+  "status";
+
+
+  document
+  .getElementById(
+    "pdfStatus"
+  )
+  .textContent =
+  "Grafik został usunięty.";
+
+
+  renderCalendar();
+
+  updateTomorrow();
+
+};
+
+
+/* =========================
+   STATUS
+========================= */
+
+function showStatus(
+  text,
+  type
+) {
+
+  const element =
+  document.getElementById(
+    "pdfStatus"
+  );
+
+
+  element.textContent =
+  text;
+
+
+  element.className =
+  "status";
+
+
+  if (type === "success") {
+
+    element.classList.add(
+      "success"
+    );
+
+  }
+
+
+  if (type === "warning") {
+
+    element.classList.add(
+      "warning"
+    );
+
+  }
+
+
+  element.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+/* =========================
+   WCZYTANIE DANYCH
+========================= */
+
+function loadSchedule() {
+
+  const saved =
+  localStorage.getItem(
+    "mealSchedule"
+  );
+
+
+  if (!saved) {
+
+    renderCalendar();
+
+    updateTomorrow();
+
+    return;
+  }
+
+
+  try {
+
+    schedule =
+    JSON.parse(saved);
+
+
+    document
+    .getElementById(
+      "clearSchedule"
+    )
+    .classList.remove(
+      "hidden"
+    );
+
+
+    const keys =
+    Object.keys(schedule);
+
+
+    if (keys.length > 0) {
+
+      const first =
+      keys.sort()[0];
+
+
+      const parts =
+      first.split("-");
+
+
+      calendarYear =
+      Number(parts[0]);
+
+
+      calendarMonth =
+      Number(parts[1]) - 1;
+
+    }
+
+
+    showStatus(
+      "Zapisany grafik jest dostępny w telefonie.",
+      "success"
+    );
+
+
+  } catch(error) {
+
+    console.error(error);
+
+    schedule = {};
+
+  }
+
+
+  renderCalendar();
+
+  updateTomorrow();
+
+  renderPlannedOrders();
+
+}
+
+
+loadPhone();
+
+loadSchedule();
+
+renderPlannedOrders();
 
 </script>
 
