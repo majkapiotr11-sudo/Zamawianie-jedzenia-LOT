@@ -508,7 +508,10 @@
   <div class="card">
 
     <h2>📋 Zaplanowane zamówienia</h2>
-
+<button class="main"
+        onclick="sendPlanToShortcuts()">
+  📲 Przekaż plan do Skrótów
+</button>
     <div id="plannedOrders"
          class="planned-list">
 
@@ -1780,7 +1783,60 @@ ${meal}`;
 
 };
 
+/* =========================
+   PRZEKAZANIE PLANU DO SKRÓTÓW
+========================= */
 
+window.sendPlanToShortcuts =
+function() {
+
+  const keys =
+  Object.keys(plannedOrders)
+  .sort();
+
+  if (keys.length === 0) {
+
+    alert(
+      "Nie masz jeszcze zaplanowanych zamówień."
+    );
+
+    return;
+  }
+
+  const data =
+  keys.map(key => {
+
+    const order =
+    plannedOrders[key];
+
+    return [
+      key,
+      order.route,
+      order.crew,
+      order.meal
+    ].join("|");
+
+  }).join("\n");
+
+
+  /*
+    Kodujemy plan w adresie URL.
+    Skróty będzie mogło go później odczytać.
+  */
+
+  const encoded =
+  encodeURIComponent(data);
+
+
+  const shortcutURL =
+  "shortcuts://run-shortcut?name=Odbierz%20zamowienia&input=" +
+  encoded;
+
+
+  window.location.href =
+  shortcutURL;
+
+};
 window.openSMS =
 function() {
 
